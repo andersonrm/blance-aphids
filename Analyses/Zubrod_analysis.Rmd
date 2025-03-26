@@ -61,7 +61,7 @@ What is this analysis about?
 # Load Packages
 library(tidyverse) # Needed for data wrangling: dplyr, tidyr, ggplot2
 library(cowplot) # Needed for publication-quality ggplots
-
+library(car)
 
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # @@@@@ Data Preparation
@@ -70,7 +70,11 @@ library(cowplot) # Needed for publication-quality ggplots
 # Import datasets
 d <- read.csv("Data/Zubrod_data.csv")
 
+walla_ndvi <- read.csv("Data/NDVI_W_all.csv")
 
+walla_ndre <- read.csv("Data/NDRE_W_all.csv")
+
+s_ndre <- read.csv("Data/S_NDRE_all.csv")
 
 ```
 
@@ -84,6 +88,18 @@ d1 <- d %>%
   pivot_longer(cols = c(NDVI_TAMU, NDVI_WSU),
                names_to = "uni",
                values_to = "NDVI")
+
+walla_ndre <- walla_ndre %>% 
+  mutate(Details = factor(Details))
+
+walla_ndvi <- walla_ndvi %>% 
+  mutate(Details = factor(Details))
+
+s_ndre <- s_ndre %>% 
+  mutate(Details = factor(Details))
+
+
+
 
 ```
 
@@ -169,7 +185,7 @@ p4 <- d %>% filter(Details == "Metribuzin_Trial_Spray") %>%
 plot_grid(p1, p2, p3, p4,
           labels = c("A", "B", "C", "D"),
           nrow = 2)
-levels(d1$Details)
+
 ```
 
 * **A)** = HiRain_Hard_SP
@@ -179,9 +195,6 @@ levels(d1$Details)
 * **C)** = Metribuzin_Trail_NoSpray
 
 * **D)** = Metribuzin_Trial_Spray
-
-
-
 
 
 ## Checking the interaction (slopes) on NDVI and Yield for different platforms
@@ -198,8 +211,7 @@ d1 %>%
   facet_wrap(~Details) +
   theme_bw(base_size = 16) +
   theme(strip.background = element_blank(),
-        legend.title = element_blank()) +
-  coord_flip()
+        legend.title = element_blank())
 
 
 ```
@@ -213,7 +225,7 @@ mod1 <- lm(Yield ~ NDVI_WSU * NDVI_TAMU,
 
 summary(mod1)
 
-library(car)
+
 
 Anova(mod1, type = "II",
       test.statistic = "LR")
@@ -221,6 +233,138 @@ Anova(mod1, type = "II",
 ```
 
 * Texas A&M NDVI is a much tighter predictor of Yield.
+
+
+# NDRE
+
+
+## Correlation between TAMU & WSU NDRE platforms
+```{r NDRE_SP, echo = F}
+
+cor_label_fun <- function(data, treatment){
+data %>% filter(Details == treatment) %>% 
+  select(starts_with("N")) %>% cor() %>% 
+  data.frame() %>% remove_rownames() %>% 
+  select(1) %>% slice(2)
+}
+
+ndre_cors <- levels(s_ndre$Details) %>% 
+  map(~ cor_label_fun(s_ndre, treatment = .x))
+
+
+ndre_cors <- bind_cols(bind_rows(ndre_cors),
+          data.frame(levels(s_ndre$Details)) %>% 
+            rename(Details = levels.s_ndre.Details.)) %>% 
+  rename(cor_label = NDRE_TAMU) %>% 
+  mutate(cor_label = round(cor_label, 3),
+         cor_label = paste("r = ", cor_label, sep = ""))
+
+s_ndre %>% 
+  ggplot(aes(x = NDRE_TAMU, y = NDRE_WSU)) +
+  geom_point() +
+  geom_smooth(method = 'lm') +
+  geom_label(data = ndre_cors,
+            aes(x = 0.25, y = 0.3, label = cor_label)) +
+  facet_wrap(~Details) +
+  theme_bw(base_size = 16) +
+  theme(strip.background = element_blank())
+
+```
+
+
+## Checking the interaction (slopes) on NDRE and Yield for different platforms
+```{r interactions_NDRE, echo = F}
+
+s_ndre %>% 
+  pivot_longer(cols = c(NDRE_TAMU, NDRE_WSU),
+               values_to = "NDRE",
+               names_to = "uni") %>% 
+  ggplot(aes(x = Yield, y = NDRE)) +
+  geom_point(shape = 21,
+             aes(color = uni)) +
+  geom_smooth(method = lm,
+              formula = y ~ x,
+              aes(color = uni, fill = uni),
+              alpha = 0.3, show.legend = F) +
+  facet_wrap(~Details) +
+  theme_bw(base_size = 16) +
+  theme(strip.background = element_blank(),
+        legend.title = element_blank())
+
+
+```
+
+
+## Models and likelihood ratio test (NDRE)
+```{r models_NDRE, echo = F}
+
+mod2 <- lm(Yield ~ NDRE_WSU + NDRE_TAMU,
+           data = s_ndre)
+
+summary(mod2)
+
+library(car)
+
+Anova(mod2, type = "II",
+      test.statistic = "LR")
+
+```
+
+* Texas A&M NDRE is a slightly better predictor of Yield. Both are very good.
+
+# Walla Walla
+
+```{r walla_NDRE_cor, echo = F}
+
+
+walla_ndre_cors <- levels(walla_ndre$Details) %>% 
+  map(~ cor_label_fun(walla_ndre, treatment = .x))
+
+
+walla_ndre_cors <- bind_cols(bind_rows(walla_ndre_cors),
+          data.frame(levels(walla_ndre$Details)) %>% 
+            rename(Details = levels.walla_ndre.Details.)) %>% 
+  rename(cor_label = NDRE_TAMU) %>% 
+  mutate(cor_label = round(cor_label, 3),
+         cor_label = paste("r = ", cor_label, sep = ""))
+
+walla_ndre %>% 
+  ggplot(aes(x = NDRE_TAMU, y = NDRE_WSU)) +
+  geom_point() +
+  geom_smooth(method = 'lm') +
+  geom_label(data = walla_ndre_cors,
+            aes(x = 0.15, y = 0.2, label = cor_label)) +
+  facet_wrap(~Details) +
+  theme_bw(base_size = 16) +
+  theme(strip.background = element_blank())
+
+```
+
+```{r walla_NDVI_cor, echo = F}
+
+walla_ndvi_cors <- levels(walla_ndvi$Details) %>% 
+  map(~ cor_label_fun(walla_ndvi, treatment = .x))
+
+
+walla_ndvi_cors <- bind_cols(bind_rows(walla_ndvi_cors),
+          data.frame(levels(walla_ndvi$Details)) %>% 
+            rename(Details = levels.walla_ndvi.Details.)) %>% 
+  rename(cor_label = NDVI_TAMU) %>% 
+  mutate(cor_label = round(cor_label, 3),
+         cor_label = paste("r = ", cor_label, sep = ""))
+
+walla_ndvi %>% 
+  ggplot(aes(x = NDVI_TAMU, y = NDVI_WSU)) +
+  geom_point() +
+  geom_smooth(method = 'lm') +
+  geom_label(data = walla_ndvi_cors,
+            aes(x = 0.93, y = 0.3, label = cor_label)) +
+  facet_wrap(~Details) +
+  theme_bw(base_size = 16) +
+  theme(strip.background = element_blank())
+
+```
+
 
 ## Session Information
 

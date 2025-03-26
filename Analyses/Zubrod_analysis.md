@@ -1,7 +1,7 @@
 Zubrod quick analysis
 ================
 Riley M. Anderson
-March 04, 2025
+March 26, 2025
 
   
 
@@ -12,7 +12,15 @@ March 04, 2025
 - [Checking the interaction (slopes) on NDVI and Yield for different
   platforms](#checking-the-interaction-slopes-on-ndvi-and-yield-for-different-platforms)
 - [Models and likelihood ratio test](#models-and-likelihood-ratio-test)
-- [Session Information](#session-information)
+- [NDRE](#ndre)
+  - [Correlation between TAMU & WSU NDRE
+    platforms](#correlation-between-tamu--wsu-ndre-platforms)
+  - [Checking the interaction (slopes) on NDRE and Yield for different
+    platforms](#checking-the-interaction-slopes-on-ndre-and-yield-for-different-platforms)
+  - [Models and likelihood ratio test
+    (NDRE)](#models-and-likelihood-ratio-test-ndre)
+- [Walla Walla](#walla-walla)
+  - [Session Information](#session-information)
 
 ## Overview
 
@@ -25,9 +33,6 @@ What is this analysis about?
 ## Correlation between TAMU & WSU NDVI platforms
 
 ![](Zubrod_analysis_files/figure-gfm/Graph_name-1.png)<!-- -->
-
-    ## [1] "HiRain_Hard_SP"           "HiRain_SWW_SP"           
-    ## [3] "Metribuzin_Trail_NoSpray" "Metribuzin_Trial_Spray"
 
 - **A)** = HiRain_Hard_SP
 
@@ -75,6 +80,56 @@ What is this analysis about?
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 - Texas A&M NDVI is a much tighter predictor of Yield.
+
+# NDRE
+
+## Correlation between TAMU & WSU NDRE platforms
+
+![](Zubrod_analysis_files/figure-gfm/NDRE_SP-1.png)<!-- -->
+
+## Checking the interaction (slopes) on NDRE and Yield for different platforms
+
+![](Zubrod_analysis_files/figure-gfm/interactions_NDRE-1.png)<!-- -->
+
+## Models and likelihood ratio test (NDRE)
+
+    ## 
+    ## Call:
+    ## lm(formula = Yield ~ NDRE_WSU + NDRE_TAMU, data = s_ndre)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -55.388  -7.000  -0.131   7.270  29.613 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)   128.70      13.45   9.568  < 2e-16 ***
+    ## NDRE_WSU     -260.90      50.56  -5.160 3.44e-07 ***
+    ## NDRE_TAMU     362.96      34.09  10.648  < 2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 11.57 on 558 degrees of freedom
+    ## Multiple R-squared:  0.5475, Adjusted R-squared:  0.5459 
+    ## F-statistic: 337.6 on 2 and 558 DF,  p-value: < 2.2e-16
+    ## Anova Table (Type II tests)
+    ## 
+    ## Response: Yield
+    ##           Sum Sq  Df F value    Pr(>F)    
+    ## NDRE_WSU    3562   1  26.627 3.436e-07 ***
+    ## NDRE_TAMU  15170   1 113.388 < 2.2e-16 ***
+    ## Residuals  74654 558                      
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+- Texas A&M NDRE is a slightly better predictor of Yield. Both are very
+  good.
+
+# Walla Walla
+
+![](Zubrod_analysis_files/figure-gfm/walla_NDRE_cor-1.png)<!-- -->
+
+![](Zubrod_analysis_files/figure-gfm/walla_NDVI_cor-1.png)<!-- -->
 
 ## Session Information
 
